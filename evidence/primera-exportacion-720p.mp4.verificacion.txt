@@ -1,0 +1,58 @@
+{
+  "file": "evidence/primera-exportacion-720p.mp4",
+  "probe": {
+    "format": "mov,mp4,m4a,3gp,3g2,mj2",
+    "duration": 8.5,
+    "video": {
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "fps": "30/1",
+      "frames": 255,
+      "duration": 8.5,
+      "pixFmt": "yuvj420p"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 8.5
+    }
+  },
+  "volume": {
+    "mean": -21.2,
+    "max": -5
+  },
+  "checks": [
+    {
+      "name": "Tiene video",
+      "pass": true,
+      "detail": "h264 1280×720 30/1"
+    },
+    {
+      "name": "Tiene audio",
+      "pass": true,
+      "detail": "aac 48000 Hz 2 canales"
+    },
+    {
+      "name": "Audio audible",
+      "pass": true,
+      "detail": "media -21.2 dB, pico -5 dB"
+    },
+    {
+      "name": "Dimensiones",
+      "pass": true,
+      "detail": "1280×720"
+    },
+    {
+      "name": "Duración",
+      "pass": true,
+      "detail": "8.500 s (esperado 8.5 s)"
+    }
+  ]
+}
+OK    Tiene video: h264 1280×720 30/1
+OK    Tiene audio: aac 48000 Hz 2 canales
+OK    Audio audible: media -21.2 dB, pico -5 dB
+OK    Dimensiones: 1280×720
+OK    Duración: 8.500 s (esperado 8.5 s)

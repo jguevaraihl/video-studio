@@ -1,0 +1,58 @@
+{
+  "file": "tests/output/sync.webm",
+  "probe": {
+    "format": "matroska,webm",
+    "duration": 4.02,
+    "video": {
+      "codec": "vp9",
+      "width": 1280,
+      "height": 720,
+      "fps": "30/1",
+      "frames": null,
+      "duration": 4.02,
+      "pixFmt": "yuv420p"
+    },
+    "audio": {
+      "codec": "opus",
+      "sampleRate": 48000,
+      "channels": 2,
+      "duration": 4.02
+    }
+  },
+  "volume": {
+    "mean": -22.2,
+    "max": -6
+  },
+  "checks": [
+    {
+      "name": "Tiene video",
+      "pass": true,
+      "detail": "vp9 1280×720 30/1"
+    },
+    {
+      "name": "Tiene audio",
+      "pass": true,
+      "detail": "opus 48000 Hz 2 canales"
+    },
+    {
+      "name": "Audio audible",
+      "pass": true,
+      "detail": "media -22.2 dB, pico -6 dB"
+    },
+    {
+      "name": "Destellos detectados",
+      "pass": true,
+      "detail": "3"
+    },
+    {
+      "name": "Desfase audio/video ≤ 1 fotograma",
+      "pass": true,
+      "detail": "1.007→0.0 ms, 2.007→0.0 ms, 3.007→0.0 ms"
+    }
+  ]
+}
+OK    Tiene video: vp9 1280×720 30/1
+OK    Tiene audio: opus 48000 Hz 2 canales
+OK    Audio audible: media -22.2 dB, pico -6 dB
+OK    Destellos detectados: 3
+OK    Desfase audio/video ≤ 1 fotograma: 1.007→0.0 ms, 2.007→0.0 ms, 3.007→0.0 ms

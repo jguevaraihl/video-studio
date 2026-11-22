@@ -1,0 +1,11 @@
+# Cabeceras para Netlify o Cloudflare Pages (copiar a apps/web/dist/_headers tras compilar).
+# COOP y COEP activan el aislamiento entre orígenes (SharedArrayBuffer).
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: same-origin
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+/ffmpeg/*
+  Cache-Control: public, max-age=31536000, immutable

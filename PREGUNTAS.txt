@@ -1,0 +1,84 @@
+PREGUNTAS PENDIENTES
+====================
+
+Escribe tu respuesta debajo de cada pregunta, después de "Respuesta:".
+Si no sabes o te da igual, déjala en blanco: se mantiene la opción indicada como "Actual".
+Guarda el archivo y avísame. No escribas aquí tu clave de Alibaba.
+
+
+1. CUENTA DE ALIBABA CLOUD
+¿Tienes cuenta en Alibaba Cloud Model Studio con una clave creada?
+¿En qué región: Singapur (internacional) o Pekín?
+¿Usas un espacio de trabajo (Workspace ID)? Si es así, indícalo.
+Actual: la app pregunta la región al conectar; sin Workspace ID usa el dominio heredado dashscope-intl.
+Respuesta: No lo sé. Puedes tomar control y verificarlo o decirme cómo hacerlo? verifica que sea posible ocupar el cerebro de qwen en esta app. Si no, ve la posibilidad de otra AI gratuita.
+Resolución (22-11-2026): tienes cuenta en Singapur. Para crear la clave, Alibaba exige un medio de pago. La app agrega Google Gemini gratis para texto y visión.
+
+
+2. POLÍTICA DE GASTO
+Alibaba no permite comprobar por API la cuota gratuita. Por eso "Solo cuota gratuita" bloquea todo envío.
+¿Prefieres que siga así (seguro) o que, en ese modo, la app deje enviar y confíe en que activaste
+"Free Quota Only" en la consola (Alibaba respondería con error al agotarse la cuota)?
+Actual: bloquea todo envío facturable en "Solo cuota gratuita".
+Respuesta: No lo sé. Qué recomiendas? No puedo asignar dinero a esto. Si no es posible indícalo. No es necesario que sea qwen, pero no asignaré dinero a esto.
+Resolución: se mantiene el bloqueo. Con Gemini no hay gasto si el proyecto de Google no tiene facturación.
+
+
+3. LÍMITE DE TRAMOS
+¿Cuántas solicitudes facturables, como máximo, puede lanzar una sola operación (por ejemplo, una cadena
+de extensión por último fotograma)?
+Actual: 3.
+Respuesta: Lo que recomiendes.
+Resolución: 3.
+
+
+4. TARIFAS
+Si ves en tu consola el precio por segundo de los modelos de video (por ejemplo, wan2.7 a 720P y 1080P),
+cópialo aquí con la fecha y el enlace o captura de donde lo sacaste.
+Actual: la app muestra "costo no verificado".
+Respuesta: Lo puedes ver tú? Dónde veo esto? no me queda claro.
+Resolución: no aplica sin presupuesto. Las tarifas están en la consola de Alibaba y en https://www.alibabacloud.com/help/en/model-studio/model-pricing
+
+
+5. CONTINUACIÓN NATIVA (EXTENDER CON IA)
+El modelo de continuación solo acepta el clip de referencia como URL pública HTTPS.
+¿Tienes un almacenamiento propio donde subir fragmentos (por ejemplo, Alibaba OSS, S3, Google Drive con
+enlace público)? ¿Quieres que la app suba el fragmento por ti a ese servicio?
+Actual: tú subes el fragmento y pegas la URL.
+Respuesta: Puedo crear google drive con enlace público. Sigue el camino recomendado
+Resolución: no aplica sin presupuesto. Un enlace de Google Drive no es un enlace directo al MP4; Alibaba probablemente lo rechace.
+
+
+6. PRIMERA PRUEBA REAL DE IA
+Para comprobar la integración hace falta una generación real (consume cuota o saldo).
+¿Autorizas una prueba mínima: 1 video de texto a video, 720P, 2 segundos, cuando conectes tu clave?
+Actual: no se ha enviado nada a Alibaba.
+Respuesta: Sí, autorizo. Crea un perro astronauta o algo así.
+Resolución: no se hizo. La generación de video de Alibaba tiene costo y no asignas dinero.
+
+
+7. FORMATO Y RESOLUCIÓN POR DEFECTO
+¿Qué prefieres al abrir "Exportar"?
+Actual: MP4 a 720p.
+Respuesta: De acuerdo.
+Resolución: MP4 a 720p.
+
+
+8. NOMBRE DE LA APP
+Actual: "Estudio de Video".
+Respuesta: Ok
+Resolución: «Estudio de Video».
+
+
+9. RESULTADO EN TU PC
+Después de seguir docs/mi-primer-video.md en tu Windows con Chrome o Edge, anota:
+- ¿Se abrió la app? ¿Hubo algún error en PowerShell?
+- En "Exportar", ¿qué dice el recuadro "Ruta detectada en este navegador" para MP4 y para WebM?
+- ¿Cuánto tardó la exportación del ejemplo?
+Respuesta: Dame la ruta completa. No veo dónde está. Está en GitHub o en mi pc?
+Resolución: verificado en tu PC. Chrome y Edge: MP4 = WebCodecs AVC + AAC; WebM = WebCodecs VP9 + Opus. Ejemplo a 720p: MP4 unos 2 s, WebM unos 9 s. Guía: C:\Users\Joaquin\Documents\video-studio\docs\mi-primer-video.md
+
+
+10. CLAVE DE GEMINI (NUEVA)
+¿Creaste la clave en https://aistudio.google.com/apikey con un proyecto sin facturación?
+Respuesta:

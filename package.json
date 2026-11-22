@@ -2,7 +2,7 @@
   "name": "video-studio",
   "private": true,
   "version": "0.1.0",
-  "description": "Estudio de video web: edición multipista local y generación con IA (BYOK).",
+  "description": "Estudio de video web: edici\u00f3n multipista local y generaci\u00f3n con IA (BYOK).",
   "type": "module",
   "workspaces": [
     "packages/project",
@@ -17,10 +17,11 @@
     "postinstall": "node scripts/copy-ffmpeg.mjs",
     "dev": "concurrently -k -n web,puente -c cyan,magenta \"npm:dev:web\" \"npm:dev:bridge\"",
     "dev:web": "npm run dev -w apps/web",
+    "dev:web:sin-aislamiento": "npm run dev -w apps/web -- --mode sin-aislamiento --port 5174 --strictPort",
     "dev:bridge": "npm run dev -w apps/bridge",
     "build": "npm run build -w apps/web && npm run build -w apps/bridge",
     "preview": "npm run preview -w apps/web",
-    "typecheck": "tsc -b packages/project packages/providers && npm run typecheck -w apps/web && npm run typecheck -w apps/bridge",
+    "typecheck": "tsc -p packages/project && tsc -p packages/providers && npm run typecheck -w apps/web && npm run typecheck -w apps/bridge",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -32,6 +33,12 @@
     "@types/node": "22.20.5",
     "concurrently": "9.2.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.12"
+    "vitest": "4.1.12",
+    "vite": "7.3.8"
+  },
+  "overrides": {
+    "vite": "7.3.8",
+    "shell-quote": "1.12.0",
+    "esbuild": "0.28.2"
   }
 }

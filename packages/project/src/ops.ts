@@ -626,3 +626,11 @@ export function snap(t: Ticks, candidates: { t: Ticks; label: string }[], thresh
   }
   return best ? { t: best.t, snapped: true, target: best.t, label: best.label } : { t, snapped: false, target: null, label: null };
 }
+
+/** Abre un hueco: desplaza duration ticks todo lo que empieza en at o después (todas las pistas). */
+export function insertGap(p: Project, at: Ticks, duration: Ticks): Project {
+  const clips = { ...p.clips };
+  for (const c of Object.values(p.clips)) if (c.start >= at) clips[c.id] = { ...c, start: c.start + duration };
+  const cues = p.subtitles.cues.map((c) => (!c.link && c.start >= at ? { ...c, start: c.start + duration, end: c.end + duration } : c));
+  return touch({ ...p, clips, subtitles: { ...p.subtitles, cues } });
+}
