@@ -39,6 +39,10 @@ Auxiliares: `qwen-plus` (texto y mejora de prompt), `qwen3-vl-plus` (visión, im
 
 ## Cuota gratuita y protección
 
+- **Medio de pago obligatorio.** Para crear una clave, Alibaba exige completar los datos de facturación y vincular una tarjeta, PayPal, Google Pay o Apple Pay. Visto en la consola el 22 de noviembre de 2026. Sin eso no hay clave, ni siquiera para la cuota gratuita.
+- La tabla de precios de Singapur (21-11-2026) muestra 1 millón de tokens gratis por 90 días para `qwen4-max`, `qwen3.8-max` y `qwen3.7-max`. La app usa `qwen3.8-max` para texto.
+- `wan3.0-video` no está en la lista de cuotas retiradas, pero la página no indica cuántos segundos gratis da. No confirmado.
+
 - El 29 de octubre de 2026 Alibaba retiró la cuota gratuita para cuentas nuevas en wan2.5, wan2.6, wan2.7, qwen-plus, qwen-max y qwen-vl.
 - No existe API para consultar la cuota restante ni el estado del interruptor «Free Quota Only».
 - El interruptor está en Consola › Model usage › pestaña Free Quota. Tarda unos 30 minutos en aplicarse.

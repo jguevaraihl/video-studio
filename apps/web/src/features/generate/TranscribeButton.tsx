@@ -52,6 +52,7 @@ export function TranscribeButton() {
   const selection = useStore((s) => s.selection);
   const playhead = useStore((s) => s.playhead);
   const { session } = useBridgeStatus();
+  const gemini = session?.provider === 'gemini';
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const clip = pickClip(project, selection, playhead);
@@ -105,10 +106,11 @@ export function TranscribeButton() {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Button size="sm" onClick={run} disabled={!session || !clip || busy} title={!session ? 'Conecta la IA en Ajustes de IA' : !clip ? 'Selecciona un clip con audio' : undefined}>
+      <Button size="sm" onClick={run} disabled={!session || gemini || !clip || busy} title={!session ? 'Conecta la IA en Ajustes de IA' : gemini ? 'Transcribir requiere una clave de Alibaba Cloud' : !clip ? 'Selecciona un clip con audio' : undefined}>
         {busy ? 'Transcribiendo…' : 'Transcribir con IA'}
       </Button>
-      {session && clip && <p className="text-[11px] text-ink-500">Sale del equipo: el audio del tramo usado de «{project.assets[clip.assetId]?.name}», en WAV mono. Modelo {ASR_MODEL}. 1 solicitud. Costo no verificado.</p>}
+      {gemini && <p className="text-[11px] text-ink-500">Con Gemini la app no transcribe. Esta función requiere Alibaba Cloud.</p>}
+      {session && !gemini && clip && <p className="text-[11px] text-ink-500">Sale del equipo: el audio del tramo usado de «{project.assets[clip.assetId]?.name}», en WAV mono. Modelo {ASR_MODEL}. 1 solicitud. Costo no verificado.</p>}
       {note && <Notice kind="warn">{note}</Notice>}
     </div>
   );

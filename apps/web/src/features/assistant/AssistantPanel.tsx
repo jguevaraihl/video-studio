@@ -5,15 +5,13 @@
  */
 import { useState } from 'react';
 import { applyCommands, describeCommand, EditProposalSchema, projectSummaryForAssistant, secondsToTicks, ticksToSeconds, type EditProposal, type MediaClip } from '@vs/project';
-import { ASSISTANT_SYSTEM, safeJson } from '@vs/providers';
+import { ASSISTANT_SYSTEM, auxModelFor, safeJson } from '@vs/providers';
 import { useStore } from '../../state/store.ts';
 import { Button, Notice, Section, inputClass } from '../../ui/kit.tsx';
 import { bridge, useBridgeStatus } from '../generate/bridge-client.ts';
 import { blobForAssetId } from '../../lib/media-service.ts';
 import { seek } from '../../lib/player-instance.ts';
 
-const CHAT_MODEL = 'qwen-plus';
-const VISION_MODEL = 'qwen3-vl-plus';
 
 /** Extrae fotogramas JPEG reducidos (lado mayor 512 px) de un clip, cada `every` segundos del tramo usado. */
 async function sampleFrames(clip: MediaClip, every: number, max: number): Promise<{ seconds: number; dataUri: string }[]> {
@@ -54,6 +52,10 @@ export function AssistantPanel() {
   const project = useStore((s) => s.project)!;
   const selection = useStore((s) => s.selection);
   const { session } = useBridgeStatus();
+  const provider = session?.provider ?? 'alibaba';
+  const CHAT_MODEL = auxModelFor(provider, 'text')!;
+  const VISION_MODEL = auxModelFor(provider, 'vision')!;
+  const costLabel = provider === 'gemini' ? 'Nivel gratuito de Gemini: Google usa estos datos para mejorar sus productos.' : 'Costo no verificado.';
   const [ask, setAsk] = useState('');
   const [busy, setBusy] = useState(false);
   const [proposal, setProposal] = useState<EditProposal | null>(null);
@@ -108,7 +110,7 @@ export function AssistantPanel() {
       {!session && <Notice kind="info">Conecta la IA en <button className="underline" onClick={() => st.setAiSettingsOpen(true)}>Ajustes de IA</button> para usar el asistente.</Notice>}
       <Section title="Pedir un cambio">
         <textarea className={`${inputClass} min-h-20`} value={ask} onChange={(e) => setAsk(e.target.value)} placeholder="Ej.: acorta el primer clip a 3 s y añade una disolución de 1 s" />
-        <p className="mt-1 text-[11px] text-ink-500">Sale del equipo: tu petición y un resumen del montaje (nombres, tiempos y pistas). No salen archivos. Modelo {CHAT_MODEL}. 1 solicitud. Costo no verificado.</p>
+        <p className="mt-1 text-[11px] text-ink-500">Sale del equipo: tu petición y un resumen del montaje (nombres, tiempos y pistas). No salen archivos. Modelo {CHAT_MODEL}. 1 solicitud. {costLabel}</p>
         <Button className="mt-2" variant="primary" onClick={propose} disabled={!session || !ask.trim() || busy}>{busy ? 'Pensando…' : 'Proponer cambios'}</Button>
       </Section>
       {error && <Notice kind="error">{error}</Notice>}
@@ -125,7 +127,7 @@ export function AssistantPanel() {
         </Section>
       )}
       <Section title="Capítulos con visión">
-        <p className="text-[11px] text-ink-500">Selecciona un clip de video. Sale del equipo: hasta 16 fotogramas JPEG reducidos a 512 px, uno cada 2 s. Modelo {VISION_MODEL}. 1 solicitud.</p>
+        <p className="text-[11px] text-ink-500">Selecciona un clip de video. Sale del equipo: hasta 16 fotogramas JPEG reducidos a 512 px, uno cada 2 s. Modelo {VISION_MODEL.split('#')[0]}. 1 solicitud. {costLabel}</p>
         <Button className="mt-2" size="sm" onClick={detect} disabled={!session || !selectedVideo || busy}>Detectar capítulos</Button>
         {chapters && (
           <ul className="mt-2 flex flex-col gap-1 text-xs">

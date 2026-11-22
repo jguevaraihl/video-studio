@@ -36,6 +36,13 @@ Entorno de las pruebas: Chromium headless 1.63 en Linux, dentro de un contenedor
 | Extender A: ralentizar y bucle inteligente | `features/extend/` | e2e: la duración final coincide | El bucle busca similitud en gris de 32×18. |
 | Interfaz para móvil | `Editor.tsx` | Captura a 390 px | Pensada para escritorio; en móvil hay menos controles. |
 
+## IA gratuita (Google Gemini)
+
+| Función | Implementación | Evidencia | Limitación |
+|---|---|---|---|
+| Proveedor Gemini para texto y visión | `catalog.ts` (`auxModelFor`), `dashscope.ts` (`chat`), `server.ts` | Contrato: URL y cabecera de Gemini, sin `response_format`, video y voz bloqueados sin llamar al proveedor | Sin prueba real. Usa la API compatible con OpenAI, en beta según Google. |
+| Selector de proveedor en «Conexión de IA» | `AiSettingsModal.tsx` | Captura con conexión simulada | Disponibilidad en Chile sin confirmar. |
+
 ## IA (Alibaba Cloud Model Studio)
 
 Ningún flujo de IA se probó contra la API real, por la regla de no consumir cuota. Las pruebas usan respuestas simuladas con la forma documentada.

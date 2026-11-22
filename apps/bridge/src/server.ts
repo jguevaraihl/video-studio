@@ -2,7 +2,7 @@
  * Puente local opcional para IA (BYOK).
  * - Escucha en loopback (127.0.0.1) por defecto y solo acepta orígenes permitidos.
  * - Guarda la clave únicamente en memoria de proceso. Nunca la escribe en disco, logs ni respuestas.
- * - Reenvía solo a hosts oficiales de Alibaba Cloud (aliyuncs.com).
+ * - Reenvía solo a hosts oficiales de Alibaba Cloud (aliyuncs.com) y de la API de Gemini (generativelanguage.googleapis.com).
  * - Aplica la política de gasto antes de cada solicitud facturable.
  * El editor funciona sin este puente.
  */
@@ -10,6 +10,7 @@ import { createServer, type IncomingMessage, type ServerResponse, type Server } 
 import { z } from 'zod';
 import {
   ALLOWED_UPSTREAM_HOST,
+  isAllowedUpstream,
   AUX_MODELS,
   REGIONS,
   VIDEO_MODELS,
@@ -56,7 +57,8 @@ export interface BridgeOptions {
 
 const SessionBody = z.object({
   apiKey: z.string().min(8).max(300),
-  region: z.enum(['ap-southeast-1', 'cn-beijing']),
+  provider: z.enum(['alibaba', 'gemini']).default('alibaba'),
+  region: z.enum(['ap-southeast-1', 'cn-beijing']).default('ap-southeast-1'),
   workspaceId: z.string().regex(/^[\w-]{1,80}$/).nullable().optional(),
 });
 const PolicyBody = z.object({
@@ -75,7 +77,7 @@ export function redact(text: string, key?: string): string {
 export function createBridge(opts: BridgeOptions = {}): { server: Server; state: { session: Session | null; submits: Map<string, SubmitRecord> } } {
   const fetchFn: FetchLike = opts.fetchFn ?? (async (url, init) => {
     const host = new URL(url).hostname;
-    if (!ALLOWED_UPSTREAM_HOST.test(host)) throw new Error(`Destino no permitido: ${host}`);
+    if (!isAllowedUpstream(host)) throw new Error(`Destino no permitido: ${host}`);
     const r = await fetch(url, init);
     return { ok: r.ok, status: r.status, headers: r.headers, text: () => r.text() };
   });
@@ -118,8 +120,9 @@ export function createBridge(opts: BridgeOptions = {}): { server: Server; state:
     state.session
       ? {
           connected: true,
+          provider: state.session.creds.provider ?? 'alibaba',
           region: state.session.creds.region,
-          regionLabel: REGIONS[state.session.creds.region].label,
+          regionLabel: state.session.creds.provider === 'gemini' ? 'Google Gemini (nivel gratuito)' : REGIONS[state.session.creds.region].label,
           workspaceId: state.session.creds.workspaceId ?? null,
           policy: state.session.policy,
           maxSegmentsPerOperation: state.session.maxSegmentsPerOperation,
@@ -134,7 +137,7 @@ export function createBridge(opts: BridgeOptions = {}): { server: Server; state:
   };
 
   const enforce = (s: Session, plan: OperationPlan) => {
-    const d = decide(s.policy, plan, { maxSegmentsPerOperation: s.maxSegmentsPerOperation });
+    const d = decide(s.policy, { ...plan, provider: s.creds.provider ?? 'alibaba' }, { maxSegmentsPerOperation: s.maxSegmentsPerOperation });
     if (!d.allowed) throw new ProviderError('blocked-by-policy', d.reason, 'POLICY', 403);
     return d;
   };
@@ -165,7 +168,7 @@ export function createBridge(opts: BridgeOptions = {}): { server: Server; state:
       if (req.method === 'POST' && path === '/api/session') {
         const b = SessionBody.parse(await readBody(req));
         // La clave no se verifica aquí para no gastar: se valida en la primera solicitud real.
-        state.session = { creds: { apiKey: b.apiKey.trim(), region: b.region as Region, workspaceId: b.workspaceId ?? null }, policy: 'free-only', maxSegmentsPerOperation: 3, connectedAt: Date.now() };
+        state.session = { creds: { apiKey: b.apiKey.trim(), region: b.region as Region, workspaceId: b.provider === 'gemini' ? null : (b.workspaceId ?? null), provider: b.provider }, policy: 'free-only', maxSegmentsPerOperation: 3, connectedAt: Date.now() };
         return send(res, 200, { session: publicSession() });
       }
       if (req.method === 'DELETE' && path === '/api/session') {
@@ -184,7 +187,7 @@ export function createBridge(opts: BridgeOptions = {}): { server: Server; state:
         return send(res, 200, { session: publicSession() });
       }
       if (req.method === 'POST' && path === '/api/preflight') {
-        const plan = (await readBody(req)) as OperationPlan;
+        const plan = { ...((await readBody(req)) as OperationPlan), provider: state.session?.creds.provider ?? 'alibaba' } as OperationPlan;
         const policy = state.session?.policy ?? 'free-only';
         const d = decide(policy, plan, { maxSegmentsPerOperation: state.session?.maxSegmentsPerOperation ?? 3 });
         return send(res, 200, { decision: d, connected: !!state.session });
@@ -200,6 +203,7 @@ export function createBridge(opts: BridgeOptions = {}): { server: Server; state:
         const raw = (await readBody(req)) as { clientRequestId?: string; segments?: number };
         const clientRequestId = z.string().min(8).max(80).parse(raw.clientRequestId);
         const r = VideoTaskRequestSchema.parse(raw);
+        if (s.creds.provider === 'gemini') throw new ProviderError('model-unavailable', 'Con Gemini la app no genera video. Conecta una clave de Alibaba Cloud para eso.', null, 400);
         const model = findVideoModel(r.model);
         enforce(s, { operation: r.operation, model: r.model, region: s.creds.region, maxRequests: Math.max(1, Number(raw.segments ?? 1)), videoSeconds: r.duration, resolution: r.resolution, dataOut: [] });
         if (!model?.regions.includes(s.creds.region)) throw new ProviderError('region-mismatch', RECOVERY['region-mismatch']);

@@ -42,6 +42,20 @@ export const REGIONS: Record<Region, RegionInfo> = {
 /** Hosts a los que el puente puede reenviar solicitudes o de los que puede descargar resultados. */
 export const ALLOWED_UPSTREAM_HOST = /^([a-z0-9-]+\.)*(aliyuncs\.com|alibabacloud\.com)$/i;
 
+/** Proveedores de IA. «gemini» solo cubre texto y visión, con el nivel gratuito de Google. */
+export type ProviderId = 'alibaba' | 'gemini';
+
+/** Host oficial de la API de Gemini (compatible con OpenAI). */
+export const GEMINI_HOST = /^generativelanguage\.googleapis\.com$/i;
+export const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
+export const SRC_GEMINI_OPENAI = 'https://ai.google.dev/gemini-api/docs/openai';
+export const SRC_GEMINI_PRICING = 'https://ai.google.dev/gemini-api/docs/pricing';
+
+/** true si el puente puede reenviar a este host. */
+export function isAllowedUpstream(host: string): boolean {
+  return ALLOWED_UPSTREAM_HOST.test(host) || GEMINI_HOST.test(host);
+}
+
 export type BodyStyle =
   /** wan2.7 I2V: input.media[] con first_frame / first_clip; parameters.resolution y duration. */
   | 'wan27-media'
@@ -77,7 +91,7 @@ export interface VideoModel {
   continuationIncludesReference?: boolean;
   resultUrlValidHours: number;
   /** Cuota gratuita para cuentas nuevas según la página de cuota gratuita. */
-  freeQuotaForNewUsers: 'removed' | 'not-listed-as-removed' | 'unknown';
+  freeQuotaForNewUsers: 'removed' | 'not-listed-as-removed' | 'free-tier' | 'unknown';
   sources: string[];
   verifiedAt: string;
   notes?: string;
@@ -87,12 +101,14 @@ export interface AuxModel {
   id: string;
   label: string;
   operation: 'text' | 'vision' | 'asr';
+  /** Proveedor. Si falta, es Alibaba. */
+  provider?: ProviderId;
   regions: Region[];
   status: 'verified' | 'partial';
   languages?: string[];
   timestamps?: 'sentence' | 'word' | 'none';
   input?: { base64: boolean; publicUrl: boolean; maxSeconds?: number; maxBytes?: number };
-  freeQuotaForNewUsers: 'removed' | 'not-listed-as-removed' | 'unknown';
+  freeQuotaForNewUsers: 'removed' | 'not-listed-as-removed' | 'free-tier' | 'unknown';
   sources: string[];
   verifiedAt: string;
   notes?: string;
@@ -233,6 +249,42 @@ export const VIDEO_MODELS: VideoModel[] = [
 
 export const AUX_MODELS: AuxModel[] = [
   {
+    id: 'qwen3.8-max',
+    label: 'Qwen3.8 Max · texto',
+    operation: 'text',
+    regions: ['ap-southeast-1'],
+    status: 'partial',
+    freeQuotaForNewUsers: 'not-listed-as-removed',
+    sources: [SRC_JSON, SRC_FREE, 'https://www.alibabacloud.com/help/en/model-studio/model-pricing'],
+    verifiedAt: VERIFIED,
+    notes: 'La tabla de precios de Singapur (21-11-2026) indica 1 millón de tokens gratis por 90 días. Crear la clave exige un medio de pago.',
+  },
+  {
+    id: 'gemini-3.5-flash',
+    label: 'Gemini 3.5 Flash · texto',
+    operation: 'text',
+    provider: 'gemini',
+    regions: [],
+    status: 'partial',
+    freeQuotaForNewUsers: 'free-tier',
+    sources: [SRC_GEMINI_OPENAI, SRC_GEMINI_PRICING],
+    verifiedAt: VERIFIED,
+    notes: 'Nivel gratuito: «Free of charge». Google usa los datos del nivel gratuito para mejorar sus productos. Límites por minuto y por día en AI Studio.',
+  },
+  {
+    id: 'gemini-3.5-flash#vision',
+    label: 'Gemini 3.5 Flash · visión',
+    operation: 'vision',
+    provider: 'gemini',
+    regions: [],
+    status: 'partial',
+    freeQuotaForNewUsers: 'free-tier',
+    input: { base64: true, publicUrl: false },
+    sources: [SRC_GEMINI_OPENAI, SRC_GEMINI_PRICING],
+    verifiedAt: VERIFIED,
+    notes: 'Imágenes como data URI en image_url, según la guía de compatibilidad con OpenAI.',
+  },
+  {
     id: 'qwen-plus',
     label: 'Qwen Plus · texto',
     operation: 'text',
@@ -303,4 +355,10 @@ export const VERIFIED_PRICES: VerifiedPrice[] = [];
 
 export function priceFor(modelId: string, resolution: string): VerifiedPrice | null {
   return VERIFIED_PRICES.find((p) => p.modelId === apiModelId(modelId) && p.resolution === resolution) ?? null;
+}
+
+/** Modelo auxiliar por defecto para cada proveedor y operación. null = no disponible. */
+export function auxModelFor(provider: ProviderId, operation: AuxModel['operation']): string | null {
+  if (provider === 'gemini') return operation === 'asr' ? null : operation === 'text' ? 'gemini-3.5-flash' : 'gemini-3.5-flash#vision';
+  return operation === 'text' ? 'qwen3.8-max' : operation === 'vision' ? 'qwen3-vl-plus' : 'qwen-audio-3.1-asr-flash';
 }

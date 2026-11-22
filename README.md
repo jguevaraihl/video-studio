@@ -1,6 +1,6 @@
 # Estudio de Video
 
-Editor de video en el navegador, con generación de video por IA opcional (Alibaba Cloud Model Studio, con tu propia clave).
+Editor de video en el navegador. La IA es opcional y usa tu propia clave: Google Gemini gratis para texto y visión, o Alibaba Cloud Model Studio para generar video (de pago).
 
 - Edita en local: tus archivos no salen del equipo.
 - Exporta MP4 (H.264 + AAC) y WebM (VP9 o VP8 + Opus) a 720p o 1080p.
@@ -76,9 +76,22 @@ Sigue la guía [Mi primer video](docs/mi-primer-video.md). Son cinco minutos.
 
 ## Conectar la IA (opcional)
 
-1. Crea una clave en Alibaba Cloud Model Studio (Consola › API Keys).
-2. En la app, pulsa **IA** (arriba a la derecha) y pega la clave. Elige la región: Singapur (internacional) o Pekín.
-3. La clave queda solo en la memoria del puente local. No se guarda en disco, en el proyecto ni en el navegador. Al cerrar el puente se borra.
+### Opción gratuita: Google Gemini (texto y visión)
+
+Sirve para «Mejorar prompt», el asistente de edición y los capítulos con visión. No genera video ni transcribe.
+
+1. Entra a https://aistudio.google.com/apikey con tu cuenta de Google y crea una clave. Usa un proyecto **sin facturación activada**. Así no hay cobros: al llegar al límite diario, Google rechaza la solicitud.
+2. En la app, pulsa **IA**, elige «Google Gemini, nivel gratuito» y pega la clave.
+3. En el nivel gratuito, Google usa lo que envías para mejorar sus productos. No envíes material confidencial.
+
+Para crear clips de video sin pagar, usa un generador web con nivel gratuito, descarga el video e impórtalo en la pestaña Medios.
+
+### Opción de pago: Alibaba Cloud Model Studio (video)
+
+1. Crea una clave en Alibaba Cloud Model Studio (Consola › API Keys). Alibaba exige completar los datos de facturación y vincular un medio de pago antes de crear la clave.
+2. En la app, pulsa **IA**, elige «Alibaba Cloud Model Studio» y pega la clave. Elige la región: Singapur (internacional) o Pekín.
+
+En ambos casos la clave queda solo en la memoria del puente local. No se guarda en disco, en el proyecto ni en el navegador. Al cerrar el puente se borra.
 
 **Política de gasto.** La app arranca en «Solo cuota gratuita». Alibaba no ofrece una API para comprobar la cuota gratuita ni el interruptor «Free Quota Only». Por eso, en ese modo, la app bloquea todo envío facturable. Para generar, elige «Permitir consumo según mi cuenta» y escribe la frase de confirmación. Fija también el máximo de tramos por operación. Detalles en [docs/alibaba.md](docs/alibaba.md).
 
@@ -130,5 +143,5 @@ deploy/           Ejemplos de cabeceras para publicar la app
 
 - Importar, editar y exportar no usa la red.
 - La clave de IA nunca se escribe en disco, registros, URL, `localStorage`, proyectos ni copias portátiles.
-- El puente solo escucha en 127.0.0.1, solo acepta los orígenes del editor y solo reenvía a dominios oficiales de Alibaba Cloud (`aliyuncs.com`).
+- El puente solo escucha en 127.0.0.1, solo acepta los orígenes del editor y solo reenvía a dominios oficiales de Alibaba Cloud (`aliyuncs.com`) y de la API de Gemini (`generativelanguage.googleapis.com`).
 - Un envío con resultado incierto (por ejemplo, un corte de red) no se repite solo, para no cobrar dos veces.

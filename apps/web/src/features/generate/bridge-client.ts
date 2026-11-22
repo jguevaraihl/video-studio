@@ -4,6 +4,7 @@ import type { AuxModel, OperationPlan, PolicyDecision, VideoModel, NormalizedTas
 
 export interface BridgeSession {
   connected: true;
+  provider: 'alibaba' | 'gemini';
   region: 'ap-southeast-1' | 'cn-beijing';
   regionLabel: string;
   workspaceId: string | null;
@@ -45,7 +46,8 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 export const bridge = {
   health: () => call<{ ok: boolean; version: string; session: BridgeSession | null }>('/health'),
   catalog: () => call<{ video: VideoModel[]; aux: AuxModel[]; regions: { id: string; label: string; freeQuotaEligible: boolean }[] }>('/catalog'),
-  connect: (apiKey: string, region: string, workspaceId: string | null) => call<{ session: BridgeSession }>('/session', { method: 'POST', body: JSON.stringify({ apiKey, region, workspaceId }) }),
+  connect: (apiKey: string, region: string, workspaceId: string | null, provider: 'alibaba' | 'gemini' = 'alibaba') =>
+    call<{ session: BridgeSession }>('/session', { method: 'POST', body: JSON.stringify({ apiKey, region, workspaceId, provider }) }),
   disconnect: () => call<{ session: null }>('/session', { method: 'DELETE' }),
   setPolicy: (policy: 'free-only' | 'allow-billing', confirmPhrase?: string, maxSegmentsPerOperation?: number) =>
     call<{ session: BridgeSession }>('/policy', { method: 'POST', body: JSON.stringify({ policy, confirmPhrase, maxSegmentsPerOperation }) }),

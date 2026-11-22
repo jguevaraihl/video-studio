@@ -192,3 +192,50 @@ describe('política de gasto', () => {
     expect(d.cost).toEqual({ verified: false, label: 'costo no verificado' });
   });
 });
+
+describe('Gemini (nivel gratuito, solo texto y visión)', () => {
+  const GKEY = 'AIzaPrueba-1234567890abcdef';
+  const connectGemini = () => api('/api/session', { method: 'POST', body: JSON.stringify({ apiKey: GKEY, provider: 'gemini' }) });
+
+  it('en «Solo cuota gratuita» envía el chat a la API de Gemini con Bearer y sin response_format', async () => {
+    const s = await connectGemini();
+    expect(s.json.session.provider).toBe('gemini');
+    expect(s.json.session.policy).toBe('free-only');
+    replies.push({ status: 200, body: { choices: [{ message: { role: 'assistant', content: '{"explanation":"ok","commands":[]}' } }] } });
+    const r = await api('/api/text/chat', { method: 'POST', body: JSON.stringify({ model: 'gemini-3.5-flash', messages: [{ role: 'user', content: 'hola json' }], json: true }) });
+    expect(r.status).toBe(200);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+    expect(calls[0]!.init!.headers!.Authorization).toBe(`Bearer ${GKEY}`);
+    const body = JSON.parse(calls[0]!.init!.body!);
+    expect(body.model).toBe('gemini-3.5-flash');
+    expect(body.response_format).toBeUndefined();
+    expect(body.messages[0].role).toBe('system');
+    expect(JSON.stringify(r.json)).not.toContain(GKEY);
+  });
+
+  it('visión usa el id real del modelo (sin sufijo)', async () => {
+    await connectGemini();
+    replies.push({ status: 200, body: { choices: [{ message: { role: 'assistant', content: '{"chapters":[{"seconds":0,"title":"Inicio","description":""}]}' } }] } });
+    const r = await api('/api/vision/analyze', { method: 'POST', body: JSON.stringify({ model: 'gemini-3.5-flash#vision', frames: [{ seconds: 0, dataUri: 'data:image/jpeg;base64,AAAA' }] }) });
+    expect(r.status).toBe(200);
+    expect(JSON.parse(calls[0]!.init!.body!).model).toBe('gemini-3.5-flash');
+  });
+
+  it('no genera video ni transcribe, y no llama al proveedor', async () => {
+    await connectGemini();
+    const v = await api('/api/video/tasks', { method: 'POST', body: JSON.stringify(videoReq()) });
+    expect(v.status).toBeGreaterThanOrEqual(400);
+    const a = await api('/api/asr/transcribe', { method: 'POST', body: JSON.stringify({ model: 'qwen-audio-3.1-asr-flash', audioDataUri: 'data:audio/wav;base64,AAAA' }) });
+    expect(a.status).toBe(403);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('la política de Alibaba no cambia: «Solo cuota gratuita» sigue bloqueando el texto', async () => {
+    await connect('free-only');
+    const r = await api('/api/text/chat', { method: 'POST', body: JSON.stringify({ model: 'qwen3.8-max', messages: [{ role: 'user', content: 'hola' }] }) });
+    expect(r.status).toBe(403);
+    expect(calls).toHaveLength(0);
+    expect(decide('free-only', { operation: 'text', model: 'gemini-3.5-flash', region: 'ap-southeast-1', provider: 'gemini', maxRequests: 1, dataOut: [] }, { maxSegmentsPerOperation: 3 }).allowed).toBe(true);
+  });
+});

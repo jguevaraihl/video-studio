@@ -8,7 +8,7 @@
  * - allow-billing: requiere activación deliberada. Antes de cada envío se muestra modelo,
  *   región, volumen, número máximo de solicitudes y costo (o «costo no verificado»).
  */
-import { priceFor, type Region } from './catalog.ts';
+import { priceFor, type ProviderId, type Region } from './catalog.ts';
 
 export type SpendPolicy = 'free-only' | 'allow-billing';
 
@@ -19,6 +19,8 @@ export interface OperationPlan {
   operation: 't2v' | 'i2v' | 'continuation' | 'lastFrameChain' | 'text' | 'vision' | 'asr' | 'upload';
   model: string;
   region: Region;
+  /** Proveedor. Si falta, es Alibaba. El puente lo fija desde la sesión, no desde el cliente. */
+  provider?: ProviderId;
   /** Solicitudes facturables máximas (una cadena de N tramos = N). */
   maxRequests: number;
   /** Segundos de video a generar en total (si aplica). */
@@ -40,6 +42,21 @@ export function decide(policy: SpendPolicy, plan: OperationPlan, opts: { maxSegm
     price && plan.videoSeconds !== undefined
       ? { verified: true, amount: +(price.perSecond * plan.videoSeconds).toFixed(4), currency: price.currency, source: price.source }
       : { verified: false, label: 'costo no verificado' };
+  if (plan.provider === 'gemini') {
+    // Gemini solo se usa para texto y visión, con el nivel gratuito. Una clave de un proyecto
+    // sin facturación no puede generar cobros: Google responde con límite de uso al agotarse.
+    if (plan.operation !== 'text' && plan.operation !== 'vision') {
+      return { allowed: false, reason: 'Con Gemini la app solo usa texto y visión. Generar video y transcribir requieren Alibaba Cloud.', cost };
+    }
+    if (plan.maxRequests > opts.maxSegmentsPerOperation) {
+      return { allowed: false, reason: `La operación necesita ${plan.maxRequests} solicitudes y el límite por operación es ${opts.maxSegmentsPerOperation}.`, cost };
+    }
+    return {
+      allowed: true,
+      reason: 'Nivel gratuito de Gemini. No genera cobros si tu proyecto de Google no tiene facturación activada. Google usa estos datos para mejorar sus productos.',
+      cost: { verified: false, label: 'costo no verificado' },
+    };
+  }
   if (policy === 'free-only') {
     if (!VERIFIABLE_PROTECTION_AVAILABLE) {
       return {

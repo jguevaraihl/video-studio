@@ -4,12 +4,14 @@
  * con respuestas documentadas sin consumir cuota.
  */
 import { z } from 'zod';
-import { apiModelId, baseUrl, findVideoModel, type Region, type VideoModel } from './catalog.ts';
+import { GEMINI_BASE, apiModelId, baseUrl, findVideoModel, type ProviderId, type Region, type VideoModel } from './catalog.ts';
 
 export interface Credentials {
   apiKey: string;
   region: Region;
   workspaceId?: string | null;
+  /** Proveedor. Si falta, es Alibaba. */
+  provider?: ProviderId;
 }
 
 export type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body?: string; signal?: AbortSignal }) => Promise<{
@@ -295,9 +297,12 @@ export async function chat(
   c: Credentials,
   opts: { model: string; messages: { role: 'system' | 'user' | 'assistant'; content: unknown }[]; json?: boolean; signal?: AbortSignal },
 ): Promise<string> {
-  const url = `${baseUrl(c.region, c.workspaceId)}/compatible-mode/v1/chat/completions`;
-  const body: Record<string, unknown> = { model: opts.model, messages: opts.messages };
-  if (opts.json) body.response_format = { type: 'json_object' };
+  const gemini = c.provider === 'gemini';
+  const url = gemini ? `${GEMINI_BASE}/chat/completions` : `${baseUrl(c.region, c.workspaceId)}/compatible-mode/v1/chat/completions`;
+  // La guía de Gemini no confirma response_format json_object. Se pide JSON en un mensaje y se valida la respuesta.
+  const messages = gemini && opts.json ? [{ role: 'system' as const, content: 'Responde solo con un objeto JSON válido, sin texto adicional.' }, ...opts.messages] : opts.messages;
+  const body: Record<string, unknown> = { model: apiModelId(opts.model), messages };
+  if (opts.json && !gemini) body.response_format = { type: 'json_object' };
   let res;
   try {
     res = await fetchFn(url, { method: 'POST', headers: headers(c), body: JSON.stringify(body), signal: opts.signal });

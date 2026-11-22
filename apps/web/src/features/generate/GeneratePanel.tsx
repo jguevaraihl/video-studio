@@ -8,7 +8,7 @@ import { placeAsset, type Generation } from '@vs/project';
 import { useStore } from '../../state/store.ts';
 import { Button, Field, Notice, Section, inputClass } from '../../ui/kit.tsx';
 import { bridge, useBridgeStatus } from './bridge-client.ts';
-import { videoModelsFor, findVideoModel, PROMPT_ENHANCE_SYSTEM, type PolicyDecision, type Region } from './provider-helpers.ts';
+import { videoModelsFor, findVideoModel, auxModelFor, PROMPT_ENHANCE_SYSTEM, type PolicyDecision, type Region } from './provider-helpers.ts';
 import { submitGeneration, stopWaiting, poll, isPolling, resubmit, type SubmitInput } from './generation-service.ts';
 import { blobForAssetId } from '../../lib/media-service.ts';
 import { insertAfterClip } from '../extend/extend-service.ts';
@@ -102,7 +102,7 @@ export function GeneratePanel() {
     if (!prompt.trim()) return;
     setEnhancing(true);
     try {
-      const r = await bridge.chat('qwen-plus', [
+      const r = await bridge.chat(auxModelFor(session?.provider ?? 'alibaba', 'text')!, [
         { role: 'system', content: PROMPT_ENHANCE_SYSTEM },
         { role: 'user', content: prompt },
       ]);
@@ -201,6 +201,11 @@ export function GeneratePanel() {
       {bridgeStatus.online && !session && (
         <Notice kind="info">
           Conecta tu clave de Alibaba Cloud Model Studio en <button className="underline" onClick={() => st.setAiSettingsOpen(true)}>Ajustes de IA</button>. La clave queda solo en el puente local, en memoria.
+        </Notice>
+      )}
+      {session?.provider === 'gemini' && (
+        <Notice kind="info">
+          Con Gemini la app no genera video. «Mejorar prompt» sí funciona. Para crear un clip, usa un generador web gratuito, descarga el video e impórtalo en la pestaña Medios.
         </Notice>
       )}
       <div className="flex gap-2">
