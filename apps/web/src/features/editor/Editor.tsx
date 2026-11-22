@@ -16,12 +16,24 @@ import { resumePendingGenerations } from '../generate/generation-service.ts';
 
 type MobileTab = 'library' | 'inspector' | 'timeline';
 
+function useMediaQuery(q: string): boolean {
+  const [m, setM] = useState(() => window.matchMedia(q).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(q);
+    const on = () => setM(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [q]);
+  return m;
+}
+
 export function Editor() {
   const exportOpen = useStore((s) => s.exportOpen);
   const aiOpen = useStore((s) => s.aiSettingsOpen);
   const extendId = useStore((s) => s.extendClipId);
-  const [timelineH, setTimelineH] = useState(() => Number(localStorage.getItem('vs:tlh')) || 300);
+  const [timelineH, setTimelineH] = useState(() => Number(localStorage.getItem('vs:tlh')) || 340);
   const [mobileTab, setMobileTab] = useState<MobileTab>('timeline');
+  const desktop = useMediaQuery('(min-width: 1024px)');
   const dragRef = useRef<{ y: number; h: number } | null>(null);
 
   useEffect(() => {
@@ -58,8 +70,9 @@ export function Editor() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-ink-950">
       <TopBar />
-      {/* Escritorio */}
-      <div className="hidden min-h-0 flex-1 flex-col lg:flex">
+      {/* Escritorio. Se monta un solo diseño: el visor y la línea de tiempo no se duplican. */}
+      {desktop ? (
+      <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex min-h-0 flex-1">
           <aside className="flex w-[320px] shrink-0 flex-col border-r border-ink-800 bg-ink-900" aria-label="Biblioteca">
             <LeftPanel />
@@ -89,8 +102,9 @@ export function Editor() {
           <Timeline />
         </section>
       </div>
-      {/* Pantallas pequeñas: visor arriba y una sección a la vez */}
-      <div className="flex min-h-0 flex-1 flex-col lg:hidden">
+      ) : (
+      /* Pantallas pequeñas: visor arriba y una sección a la vez */
+      <div className="flex min-h-0 flex-1 flex-col">
         <div className="h-[38vh] shrink-0">
           <Viewer compact />
         </div>
@@ -113,6 +127,7 @@ export function Editor() {
           {mobileTab === 'inspector' && <Inspector />}
         </div>
       </div>
+      )}
       {exportOpen && <ExportDialog />}
       {aiOpen && <AiSettingsModal />}
       {extendId && <ExtendDialog clipId={extendId} />}

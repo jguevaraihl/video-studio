@@ -245,13 +245,13 @@ export function GeneratePanel() {
 
       <Section title="Parámetros">
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Modelo">
+          <div className="col-span-2"><Field label="Modelo">
             <select className={inputClass} value={model?.id ?? ''} onChange={(e) => setModelId(e.target.value)}>
               {models.map((m) => (
                 <option key={m.id} value={m.id}>{m.label}{m.status === 'partial' ? ' (parcial)' : ''}</option>
               ))}
             </select>
-          </Field>
+          </Field></div>
           <Field label="Resolución">
             <select className={inputClass} value={resolution} onChange={(e) => setResolution(e.target.value)}>
               {model?.resolutions.map((r) => <option key={r}>{r}</option>)}

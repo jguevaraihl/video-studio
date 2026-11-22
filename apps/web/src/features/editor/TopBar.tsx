@@ -36,11 +36,12 @@ export function TopBar() {
         <IconButton label="Rehacer" shortcut="Ctrl+Y" disabled={!canRedo} onClick={() => st.redo()}><IRedo /></IconButton>
       </div>
       <div className="flex-1" />
-      <Button variant="ghost" size="sm" onClick={() => setHelp(true)} aria-label="Atajos de teclado">Atajos <Kbd>?</Kbd></Button>
+      <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={() => setHelp(true)} aria-label="Atajos de teclado">Atajos <Kbd>?</Kbd></Button>
       <Button
         variant="ghost"
         size="sm"
         disabled={busy}
+        className="hidden md:inline-flex"
         title="Descarga un .zip con el proyecto y sus medios para abrirlo en otro navegador"
         onClick={async () => {
           const p = useStore.getState().project;
@@ -63,7 +64,7 @@ export function TopBar() {
         <IKey /> <span className="hidden sm:inline">IA</span>
         <span className={`h-2 w-2 rounded-full ${bridge.session ? 'bg-emerald-400' : bridge.online ? 'bg-amber-400' : 'bg-ink-500'}`} aria-hidden />
       </Button>
-      <Button variant="primary" size="sm" onClick={() => st.setExportOpen(true)} data-testid="open-export"><IDownload /> Exportar</Button>
+      <Button variant="primary" size="sm" onClick={() => st.setExportOpen(true)} data-testid="open-export" aria-label="Exportar"><IDownload /> <span className="hidden sm:inline">Exportar</span></Button>
       {help && (
         <Modal title="Atajos de teclado" onClose={() => setHelp(false)}>
           <ul className="grid gap-1.5 text-sm">

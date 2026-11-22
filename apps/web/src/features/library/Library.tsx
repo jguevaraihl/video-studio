@@ -122,7 +122,7 @@ function AssetThumb({ asset, missing }: { asset: Asset; missing: boolean }) {
       const s = Math.min(c.width / w, c.height / h);
       ctx.drawImage(img, (c.width - w * s) / 2, (c.height - h * s) / 2, w * s, h * s);
     };
-    if (asset.kind === 'video') void thumbnail(asset, Math.min(asset.duration / 3, 705_600_000)).then((b) => alive && b && draw(b, b.width, b.height));
+    if (asset.kind === 'video') void thumbnail(asset, Math.min(asset.duration * 0.23, 705_600_000 * 2.5)).then((b) => alive && b && draw(b, b.width, b.height));
     else if (asset.kind === 'image') void getPlayer().frames.image(asset).then((b) => alive && b && draw(b, b.width, b.height));
     else {
       ctx.fillStyle = '#064e3b';

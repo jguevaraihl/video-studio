@@ -56,7 +56,8 @@ export function Timeline({ compact }: { compact?: boolean }) {
   const [snapLine, setSnapLine] = useState<{ t: number; label: string } | null>(null);
   const dragRef = useRef<DragState | null>(null);
 
-  const tracks = useMemo(() => [...project.tracks].reverse(), [project.tracks]); // visual: arriba la capa superior
+  // Como en los editores de escritorio: pistas visuales arriba (la capa superior primero) y audio debajo.
+  const tracks = useMemo(() => [...project.tracks.filter((t) => t.kind !== 'audio').reverse(), ...project.tracks.filter((t) => t.kind === 'audio')], [project.tracks]);
   const duration = projectDuration(project);
   const widthPx = Math.max(1200, ((duration / TICKS_PER_SECOND) + 30) * zoom);
   const tToX = useCallback((t: number) => (t / TICKS_PER_SECOND) * zoom, [zoom]);
