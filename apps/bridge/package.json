@@ -6,12 +6,12 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
-    "build": "tsc -p tsconfig.json --noEmit false --outDir dist",
+    "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@vs/providers": "*",
     "tsx": "4.20.6",
-    "zod": "4.1.13"
+    "zod": "4.6.7"
   }
 }

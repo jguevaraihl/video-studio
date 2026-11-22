@@ -2,7 +2,7 @@
   "name": "video-studio",
   "private": true,
   "version": "0.1.0",
-  "description": "Estudio de video web: edición multipista local y generación con IA (BYOK).",
+  "description": "Estudio de video web: edici\u00f3n multipista local y generaci\u00f3n con IA (BYOK).",
   "type": "module",
   "workspaces": [
     "packages/project",
@@ -34,9 +34,11 @@
     "concurrently": "9.2.1",
     "typescript": "5.9.3",
     "vitest": "4.1.12",
-    "vite": "7.3.1"
+    "vite": "7.3.8"
   },
   "overrides": {
-    "vite": "7.3.1"
+    "vite": "7.3.8",
+    "shell-quote": "1.12.0",
+    "esbuild": "0.28.2"
   }
 }
