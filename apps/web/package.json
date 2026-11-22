@@ -1,0 +1,35 @@
+{
+  "name": "@vs/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "0.12.10",
+    "@ffmpeg/core-mt": "0.12.10",
+    "@ffmpeg/ffmpeg": "0.12.15",
+    "@ffmpeg/util": "0.12.2",
+    "@vs/project": "*",
+    "@vs/providers": "*",
+    "fflate": "0.8.2",
+    "idb": "8.0.3",
+    "mediabunny": "1.65.2",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "zod": "4.1.13",
+    "zustand": "5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.18",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.2",
+    "tailwindcss": "4.1.18",
+    "vite": "7.3.1"
+  }
+}

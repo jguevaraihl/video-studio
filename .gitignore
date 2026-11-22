@@ -1,0 +1,50 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Compilados y cachés
+dist/
+build/
+.vite/
+.cache/
+*.tsbuildinfo
+coverage/
+.eslintcache
+
+# Recursos copiados en la instalación (se regeneran con npm install)
+apps/web/public/ffmpeg/
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials*.json
+
+# Pruebas y salidas generadas
+test-results/
+playwright-report/
+blob-report/
+tests/output/
+exports/
+*.export.mp4
+*.export.webm
+
+# Videos y audios personales (solo se versionan los fixtures propios)
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.m4a
+*.wav
+*.mp3
+!fixtures/**
+!apps/web/public/sample/**
+!evidence/**
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,17 @@
+{
+  "name": "@vs/bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "build": "tsc -p tsconfig.json --noEmit false --outDir dist",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@vs/providers": "*",
+    "tsx": "4.20.6",
+    "zod": "4.1.13"
+  }
+}
