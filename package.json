@@ -17,6 +17,7 @@
     "postinstall": "node scripts/copy-ffmpeg.mjs",
     "dev": "concurrently -k -n web,puente -c cyan,magenta \"npm:dev:web\" \"npm:dev:bridge\"",
     "dev:web": "npm run dev -w apps/web",
+    "dev:web:sin-aislamiento": "npm run dev -w apps/web -- --mode sin-aislamiento --port 5174 --strictPort",
     "dev:bridge": "npm run dev -w apps/bridge",
     "build": "npm run build -w apps/web && npm run build -w apps/bridge",
     "preview": "npm run preview -w apps/web",

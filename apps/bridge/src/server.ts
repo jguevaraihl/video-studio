@@ -79,7 +79,7 @@ export function createBridge(opts: BridgeOptions = {}): { server: Server; state:
     const r = await fetch(url, init);
     return { ok: r.ok, status: r.status, headers: r.headers, text: () => r.text() };
   });
-  const allowed = new Set(opts.allowedOrigins ?? ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:4173', 'http://localhost:4173']);
+  const allowed = new Set(opts.allowedOrigins ?? ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:5174', 'http://localhost:5174', 'http://127.0.0.1:4173', 'http://localhost:4173']);
   const log = opts.log ?? ((l: string) => console.log(l));
   const state = { session: null as Session | null, submits: new Map<string, SubmitRecord>() };
 

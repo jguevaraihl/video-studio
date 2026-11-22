@@ -39,7 +39,9 @@ export async function exportAndSave(page: Page, fmt: 'mp4' | 'webm', outName: st
   await expect(start).toBeEnabled();
   const t0 = Date.now();
   await start.click();
-  await expect(page.getByTestId('export-done')).toBeVisible({ timeout: 280_000 });
+  // Termina en cuanto aparece el resultado o un error, sin esperar al tiempo límite.
+  await expect(page.getByTestId('export-done').or(page.getByRole('alert'))).toBeVisible({ timeout: 280_000 });
+  if (await page.getByRole('alert').count()) throw new Error(`La exportación falló: ${await page.getByRole('alert').first().textContent()}`);
   const elapsed = Date.now() - t0;
   const data = await page.evaluate(async () => {
     const e = window.__vsLastExport!;

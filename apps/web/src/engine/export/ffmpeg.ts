@@ -19,12 +19,15 @@ export function ffmpegMode(): 'multi' | 'single' {
 export function loadFfmpeg(): Promise<{ ff: FFmpeg; info: FfmpegInfo }> {
   instance ??= (async () => {
     const ff = new FFmpeg();
-    const mode = ffmpegMode();
-    const base = new URL(mode === 'multi' ? '/ffmpeg/mt/' : '/ffmpeg/st/', location.origin).href;
+    // Se usa siempre el core de un hilo. Medido en Chromium con @ffmpeg/core-mt 0.12.10:
+    // libx264 con hilos falla («function signature mismatch»), libvpx-vp9 cierra la pestaña
+    // y libopus se bloquea tras varias órdenes con libvpx. El core de un hilo codifica VP8 y
+    // H.264 a la misma velocidad (x264 ya iba con -threads 1) y no presenta esos fallos.
+    const mode = 'single' as const;
+    const base = new URL('/ffmpeg/st/', location.origin).href;
     await ff.load({
       coreURL: `${base}ffmpeg-core.js`,
       wasmURL: `${base}ffmpeg-core.wasm`,
-      ...(mode === 'multi' ? { workerURL: `${base}ffmpeg-core.worker.js` } : {}),
     });
     const log: string[] = [];
     const onLog = ({ message }: { message: string }) => log.push(message);
@@ -64,6 +67,7 @@ export async function runFfmpeg(args: string[], signal?: AbortSignal): Promise<v
   const logs: string[] = [];
   const onLog = ({ message }: { message: string }) => {
     logs.push(message);
+    if ((globalThis as { __vsDebugFfmpeg?: boolean }).__vsDebugFfmpeg) console.debug("[ffmpeg]", message);
     if (logs.length > 60) logs.shift();
   };
   ff.on('log', onLog);

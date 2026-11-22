@@ -33,3 +33,13 @@ test('exporta MP4 por la ruta FFmpeg.wasm forzada', async ({ page }) => {
   expect(p.audio.codec).toBe('aac');
   expect(Math.abs(p.duration - 8.5)).toBeLessThan(0.1);
 });
+
+test('exporta WebM por la ruta FFmpeg.wasm forzada', async ({ page }) => {
+  await openSample(page);
+  const { file, meta } = await exportAndSave(page, 'webm', 'ejemplo-720p-ffmpeg.webm', { forceFfmpeg: true });
+  expect(meta.route.video.via).toBe('ffmpeg');
+  const p = probe(file);
+  expect(p.video.codec).toBe('vp8');
+  expect(p.audio.codec).toBe('opus');
+  expect(Math.abs(p.duration - 8.5)).toBeLessThan(0.1);
+});

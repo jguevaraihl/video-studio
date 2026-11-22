@@ -9,6 +9,7 @@ import { allLuts, loadBuiltinLuts } from '../luts.ts';
 import { fontSourcesForWorker } from '../fonts.ts';
 import { detectRoute, outputSize, type ExportFormat, type ExportRoute, type Resolution } from './capabilities.ts';
 import { encodeWav, loadFfmpeg, runFfmpeg } from './ffmpeg.ts';
+import { AudioSample, AudioSampleSource, BufferTarget, Mp4OutputFormat, Output, WebMOutputFormat } from 'mediabunny';
 import type { ExportJob, WorkerOut } from '../../workers/export.worker.ts';
 import { estimate } from '../../storage/media.ts';
 
@@ -141,6 +142,20 @@ export async function exportProject(
   let ff: Awaited<ReturnType<typeof loadFfmpeg>>['ff'] | null = null;
   if (videoViaFfmpeg || !audioViaWc) ff = (await loadFfmpeg()).ff;
   const vEncoder = route.video!.via === 'ffmpeg' ? route.video!.encoder : null;
+  const aFile = ext === 'mp4' ? 'a.m4a' : 'a.webm';
+  if (videoViaFfmpeg && ff) {
+    // El audio se codifica antes que el video: en FFmpeg.wasm, codificar audio después de
+    // varias órdenes de video resultó inestable. Opus va siempre por WebCodecs.
+    if (route.audio!.via === 'webcodecs') {
+      onProgress({ phase: 'Codificando audio (WebCodecs)', fraction: null });
+      await ff.writeFile(aFile, await encodeAudioOnly(audio, plan.sampleRate, opts.format, route.audio!.codec));
+    } else {
+      onProgress({ phase: 'Codificando audio (FFmpeg)', fraction: null });
+      await ff.writeFile('audio.wav', encodeWav(audio, plan.sampleRate));
+      await runFfmpeg(['-hide_banner', '-i', 'audio.wav', '-c:a', 'aac', '-b:a', '160k', aFile], signal);
+      await ff.deleteFile('audio.wav');
+    }
+  }
 
   const workerResult = await new Promise<{ buffer: ArrayBuffer | null; mime: string; frames: number; renderMode: string }>((resolve, reject) => {
     signal.addEventListener('abort', () => reject(new DOMException('Exportación cancelada', 'AbortError')));
@@ -162,7 +177,7 @@ export async function exportProject(
           const seg = `seg_${String(m.index).padStart(4, '0')}.${ext}`;
           const codecArgs =
             vEncoder === 'libx264'
-              ? ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p']
+              ? ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p', '-threads', '1'] // el core multihilo 0.12.10 falla con hilos de x264
               : vEncoder === 'libvpx-vp9'
                 ? ['-c:v', 'libvpx-vp9', '-b:v', String(job.bitrate), '-deadline', 'realtime', '-cpu-used', '8', '-pix_fmt', 'yuv420p']
                 : ['-c:v', 'libvpx', '-b:v', String(job.bitrate), '-deadline', 'realtime', '-cpu-used', '8', '-pix_fmt', 'yuv420p'];
@@ -185,12 +200,13 @@ export async function exportProject(
   if (videoViaFfmpeg && ff) {
     onProgress({ phase: 'Uniendo segmentos y agregando audio (FFmpeg)', fraction: null });
     await ff.writeFile('list.txt', segments.map((s) => `file '${s}'`).join('\n'));
-    await ff.writeFile('audio.wav', encodeWav(audio, plan.sampleRate));
-    const aArgs = audioEncoderArgs ?? (opts.format === 'mp4' ? ['-c:a', 'aac', '-b:a', '160k'] : ['-c:a', 'libopus', '-b:a', '128k']);
     const out = `out.${ext}`;
-    await runFfmpeg(['-hide_banner', '-f', 'concat', '-safe', '0', '-i', 'list.txt', '-i', 'audio.wav', '-map', '0:v', '-map', '1:a', '-c:v', 'copy', ...aArgs, ...(ext === 'mp4' ? ['-movflags', '+faststart'] : []), out], signal);
+    // Pasos cortos en lugar de uno: en el core multihilo 0.12.10, unir con concat y codificar
+    // Opus en la misma orden se bloquea, y Opus después de libvpx también. El audio ya se codificó antes.
+    await runFfmpeg(['-hide_banner', '-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', `v.${ext}`], signal);
+    await runFfmpeg(['-hide_banner', '-i', `v.${ext}`, '-i', aFile, '-map', '0:v', '-map', '1:a', '-c', 'copy', ...(ext === 'mp4' ? ['-movflags', '+faststart'] : []), out], signal);
     const data = await ff.readFile(out);
-    for (const f of [...segments, 'list.txt', 'audio.wav', out]) await ff.deleteFile(f).catch(() => undefined);
+    for (const f of [...segments, 'list.txt', aFile, `v.${ext}`, out]) await ff.deleteFile(f).catch(() => undefined);
     mime = opts.format === 'mp4' ? 'video/mp4' : 'video/webm';
     blob = new Blob([data as BlobPart], { type: mime });
   } else if (!audioViaWc && ff && workerResult.buffer) {
@@ -220,4 +236,25 @@ export async function exportProject(
     frames: workerResult.frames,
     renderMode: workerResult.renderMode,
   };
+}
+
+/** Codifica solo audio con WebCodecs (mediabunny) en un contenedor de una pista. */
+async function encodeAudioOnly(channels: Float32Array[], sampleRate: number, format: 'mp4' | 'webm', codec: 'aac' | 'opus'): Promise<Uint8Array> {
+  const output = new Output({ format: format === 'mp4' ? new Mp4OutputFormat() : new WebMOutputFormat(), target: new BufferTarget() });
+  const src = new AudioSampleSource({ codec, bitrate: 160_000 });
+  output.addAudioTrack(src);
+  await output.start();
+  const n = channels[0]!.length;
+  for (let off = 0; off < n; off += sampleRate) {
+    const len = Math.min(sampleRate, n - off);
+    const planar = new Float32Array(len * 2);
+    planar.set(channels[0]!.subarray(off, off + len), 0);
+    planar.set((channels[1] ?? channels[0]!).subarray(off, off + len), len);
+    const sample = new AudioSample({ data: planar, format: 'f32-planar', numberOfChannels: 2, sampleRate, timestamp: off / sampleRate });
+    await src.add(sample);
+    sample.close();
+  }
+  src.close();
+  await output.finalize();
+  return new Uint8Array((output.target as BufferTarget).buffer!);
 }

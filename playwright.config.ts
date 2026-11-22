@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${port}`, viewport: { width: 1440, height: 900 }, trace: 'off' },
   webServer: {
-    command: noIso ? 'npm run dev:web -- --port 5174 --strictPort' : 'npm run dev',
+    command: noIso ? 'npm run dev:web:sin-aislamiento' : 'npm run dev',
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: true,
     timeout: 60_000,

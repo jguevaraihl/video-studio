@@ -119,7 +119,7 @@ export function ExportDialog() {
             ) : (
               <p className="text-ink-400">Comprobando codificadores…</p>
             )}
-            <p className="mt-2 text-ink-500">FFmpeg.wasm: {ffmpegMode() === 'multi' ? 'multihilo (aislamiento entre orígenes activo)' : 'un solo hilo (sin aislamiento entre orígenes)'}.</p>
+            <p className="mt-2 text-ink-500">Aislamiento entre orígenes: {ffmpegMode() === 'multi' ? 'activo' : 'inactivo'}. FFmpeg.wasm usa el núcleo de un hilo, el más estable.</p>
           </div>
           {estimate && (
             <div className="text-xs text-ink-400">

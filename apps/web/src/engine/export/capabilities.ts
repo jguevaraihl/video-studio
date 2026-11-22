@@ -45,19 +45,22 @@ export async function detectRoute(format: ExportFormat, width: number, height: n
   } else {
     if (await wc(() => canEncodeVideo('vp9', vOpts))) video = { via: 'webcodecs', codec: 'vp9' };
     else if (await wc(() => canEncodeVideo('vp8', vOpts))) video = { via: 'webcodecs', codec: 'vp8' };
-    if (await wc(() => canEncodeAudio('opus', aOpts))) audio = { via: 'webcodecs', codec: 'opus' };
+    // Opus siempre por WebCodecs, también con FFmpeg forzado: libopus en FFmpeg.wasm 0.12.10
+    // cierra la pestaña al codificar desde WAV (medido en Chromium). Chrome y Edge traen Opus.
+    if (hasWebCodecs && (await canEncodeAudio('opus', aOpts).catch(() => false))) audio = { via: 'webcodecs', codec: 'opus' };
   }
   if (!video || !audio) {
     const info = await ffmpegInfo();
     if (info) {
       if (!video) {
         if (format === 'mp4' && info.encoders.libx264) video = { via: 'ffmpeg', encoder: 'libx264' };
-        if (format === 'webm' && info.encoders.libvpxVp9) video = { via: 'ffmpeg', encoder: 'libvpx-vp9' };
-        else if (format === 'webm' && info.encoders.libvpx) video = { via: 'ffmpeg', encoder: 'libvpx' };
+        // VP8 primero: en FFmpeg.wasm 0.12.10, libvpx-vp9 cierra la pestaña en el core multihilo
+        // y codifica a menos de 1 fotograma/s en el de un hilo (medido a 720p en Chromium).
+        if (format === 'webm' && info.encoders.libvpx) video = { via: 'ffmpeg', encoder: 'libvpx' };
+        else if (format === 'webm' && info.encoders.libvpxVp9) video = { via: 'ffmpeg', encoder: 'libvpx-vp9' };
       }
       if (!audio) {
         if (format === 'mp4' && info.encoders.aac) audio = { via: 'ffmpeg', encoder: 'aac' };
-        if (format === 'webm' && info.encoders.libopus) audio = { via: 'ffmpeg', encoder: 'libopus' };
       }
     }
   }
