@@ -61,10 +61,13 @@ export function findLoopCandidates(
   return picked;
 }
 
-/** Duración final de un bucle: se repite el tramo [toTime, fromTime] las veces indicadas. */
-export function loopSummary(originalSeconds: number, c: LoopCandidate, repeats: number, crossfadeSeconds: number): ExtensionSummary {
+/**
+ * Duración final de un bucle: se repite el tramo [toTime, fromTime] las veces indicadas.
+ * El fundido se centra en cada empalme y usa material sobrante, así que no acorta el resultado.
+ */
+export function loopSummary(originalSeconds: number, c: LoopCandidate, repeats: number): ExtensionSummary {
   const loopLen = c.fromTime - c.toTime;
-  const added = repeats * (loopLen - crossfadeSeconds);
+  const added = repeats * loopLen;
   return { originalSeconds, addedSeconds: added, finalSeconds: originalSeconds + added };
 }
 

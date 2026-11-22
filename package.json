@@ -20,7 +20,7 @@
     "dev:bridge": "npm run dev -w apps/bridge",
     "build": "npm run build -w apps/web && npm run build -w apps/bridge",
     "preview": "npm run preview -w apps/web",
-    "typecheck": "tsc -b packages/project packages/providers && npm run typecheck -w apps/web && npm run typecheck -w apps/bridge",
+    "typecheck": "tsc -p packages/project && tsc -p packages/providers && npm run typecheck -w apps/web && npm run typecheck -w apps/bridge",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -32,6 +32,10 @@
     "@types/node": "22.20.5",
     "concurrently": "9.2.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.12"
+    "vitest": "4.1.12",
+    "vite": "7.3.1"
+  },
+  "overrides": {
+    "vite": "7.3.1"
   }
 }
