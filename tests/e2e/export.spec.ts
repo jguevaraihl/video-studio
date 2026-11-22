@@ -43,3 +43,11 @@ test('exporta WebM por la ruta FFmpeg.wasm forzada', async ({ page }) => {
   expect(p.audio.codec).toBe('opus');
   expect(Math.abs(p.duration - 8.5)).toBeLessThan(0.1);
 });
+
+test('exporta MP4 a 1080p', async ({ page }) => {
+  await openSample(page);
+  const { file } = await exportAndSave(page, 'mp4', 'ejemplo-1080p.mp4', { resolution: '1080p' });
+  const p = probe(file);
+  expect([p.video.width, p.video.height]).toEqual([1920, 1080]);
+  expect(p.audio.codec).toBe('aac');
+});
